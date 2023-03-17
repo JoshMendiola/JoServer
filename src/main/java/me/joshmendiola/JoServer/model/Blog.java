@@ -10,7 +10,7 @@ import lombok.Setter;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.UuidGenerator;
 
-import java.util.Date;
+import java.sql.Date;
 import java.util.Objects;
 import java.util.UUID;
 
