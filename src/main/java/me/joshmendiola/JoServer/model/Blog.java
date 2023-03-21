@@ -1,10 +1,7 @@
 package me.joshmendiola.JoServer.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.Hibernate;
@@ -24,7 +21,7 @@ public class Blog
     @UuidGenerator
     @Getter
     @Setter
-    private UUID id;
+    private UUID blog_id;
 
     @Getter
     @Setter
@@ -36,7 +33,7 @@ public class Blog
 
     @Getter
     @Setter
-    private String text;
+    private String body;
 
     @Getter
     @Setter
@@ -48,7 +45,7 @@ public class Blog
         if (this == o) return true;
         if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
         Blog blog = (Blog) o;
-        return id != null && Objects.equals(id, blog.id);
+        return blog_id != null && Objects.equals(blog_id, blog.blog_id);
     }
 
     @Override
