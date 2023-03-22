@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.UuidGenerator;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 import java.sql.Date;
 import java.util.Objects;
