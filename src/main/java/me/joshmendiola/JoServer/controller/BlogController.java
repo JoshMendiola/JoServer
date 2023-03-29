@@ -56,7 +56,7 @@ public class BlogController
 
     @PutMapping("/blog/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updateUserAccount(@RequestBody @NotNull Blog newBlog, @PathVariable UUID id)
+    public void updateBlog(@RequestBody @NotNull Blog newBlog, @PathVariable UUID id)
     {
         Blog blog = repository.getReferenceById(id);
         blog.setAuthor(newBlog.getAuthor());
@@ -64,6 +64,17 @@ public class BlogController
         blog.setBody(newBlog.getBody());
         blog.setDate(newBlog.getDate());
         repository.save(blog);
+    }
+
+    @DeleteMapping("/blog/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteBlog(@PathVariable UUID id)
+    {
+        if(repository.findById(id).isEmpty())
+        {
+            throw new NullPointerException("ERROR: No blogs with that ID found !");
+        }
+        repository.deleteById(id);
     }
 
 }
