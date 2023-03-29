@@ -2,6 +2,7 @@ package me.joshmendiola.JoServer.controller;
 
 import me.joshmendiola.JoServer.model.Blog;
 import me.joshmendiola.JoServer.repository.BlogRepository;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -11,7 +12,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @RestController
-@CrossOrigin(origins = "*", allowedHeaders = "Content-Type", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+@CrossOrigin
 public class BlogController
 {
     @Autowired
@@ -38,4 +39,31 @@ public class BlogController
             return blog.get();
         }
     }
+
+    @PostMapping("/blog")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Blog addBlog(@RequestBody @NotNull Blog blog)
+    {
+        UUID uuid = UUID.randomUUID();
+        blog.setBlog_id(uuid);
+
+        if(repository.existsById(blog.getBlog_id()))
+        {
+            throw new IllegalArgumentException("Error: A blog with that ID already exists in the database!");
+        }
+        return repository.save(blog);
+    }
+
+    @PutMapping("/blog/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void updateUserAccount(@RequestBody @NotNull Blog newBlog, @PathVariable UUID id)
+    {
+        Blog blog = repository.getReferenceById(id);
+        blog.setAuthor(newBlog.getAuthor());
+        blog.setTitle(newBlog.getTitle());
+        blog.setBody(newBlog.getBody());
+        blog.setDate(newBlog.getDate());
+        repository.save(blog);
+    }
+
 }
