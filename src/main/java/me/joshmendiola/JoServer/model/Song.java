@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.UuidGenerator;
 
+import java.sql.Date;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -44,17 +45,21 @@ public class Song
     @Setter
     private String cover;
 
+    @Getter
+    @Setter
+    private Date date;
+
     @Override
     public boolean equals(Object o)
     {
         if (this == o) return true;
         if (!(o instanceof Song song)) return false;
-        return getSong_id().equals(song.getSong_id()) && getTitle().equals(song.getTitle()) && Objects.equals(getAbout(), song.getAbout()) && getAuthor().equals(song.getAuthor()) && getAudio().equals(song.getAudio()) && Objects.equals(getCover(), song.getCover());
+        return getSong_id().equals(song.getSong_id()) && getTitle().equals(song.getTitle()) && Objects.equals(getAbout(), song.getAbout()) && getAuthor().equals(song.getAuthor()) && getAudio().equals(song.getAudio()) && Objects.equals(getCover(), song.getCover()) && getDate().equals(song.getDate());
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(getSong_id(), getTitle(), getAbout(), getAuthor(), getAudio(), getCover());
+        return Objects.hash(getSong_id(), getTitle(), getAbout(), getAuthor(), getAudio(), getCover(), getDate());
     }
 }

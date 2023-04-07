@@ -1,27 +1,35 @@
 package me.joshmendiola.JoServer.controller;
 
-import me.joshmendiola.JoServer.model.Blog;
 import me.joshmendiola.JoServer.model.Song;
 import me.joshmendiola.JoServer.repository.SongRepository;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @RestController
 @CrossOrigin
-public class MusicController
+public class SongController
 {
     @Autowired
     private SongRepository repository;
+    @Autowired
+    private ResourceLoader resourceLoader;
 
     @GetMapping("/songs")
     @ResponseStatus(HttpStatus.ACCEPTED)
-    public List<Song> getALlSongs()
+    public List<Song> getAllSongs()
     {
         return repository.findAll();
     }
@@ -41,12 +49,33 @@ public class MusicController
         }
     }
 
-    @PostMapping("/song")
+    @PostMapping(value = "/song", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
-    public Song addSong(@RequestBody @NotNull Song song)
+    public Song addSong(@RequestPart("cover") @NotNull MultipartFile cover,
+                        @RequestPart("song") @NotNull Song songData,
+                        @RequestPart("audio") @NotNull MultipartFile audio) throws IOException
     {
+        byte[] fileBytes = cover.getBytes();
+
+        String uploadsFolder = resourceLoader.getResource("classpath:uploads/").getFile().getAbsolutePath();
+
+        Path coverFilePath = Paths.get(uploadsFolder, cover.getOriginalFilename() + UUID.randomUUID());
+        Path audioFilePath = Paths.get(uploadsFolder, audio.getOriginalFilename() + UUID.randomUUID());
+
+        Files.write(coverFilePath, fileBytes);
+
         UUID uuid = UUID.randomUUID();
+        Song song = new Song();
+
+        System.out.println(songData.getAuthor());
+
         song.setSong_id(uuid);
+        song.setTitle(songData.getTitle());
+        song.setDate(songData.getDate());
+        song.setAbout(songData.getAbout());
+        song.setAuthor(songData.getAuthor());
+        song.setCover(coverFilePath.toString());
+        song.setAudio(audioFilePath.toString());
 
         if(repository.existsById(song.getSong_id()))
         {
@@ -65,6 +94,7 @@ public class MusicController
         song.setTitle(newSong.getTitle());
         song.setCover(newSong.getCover());
         song.setAudio(newSong.getAudio());
+        song.setDate(newSong.getDate());
         repository.save(song);
     }
 
