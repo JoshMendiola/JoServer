@@ -2,6 +2,7 @@ package me.joshmendiola.JoServer.controller;
 
 import me.joshmendiola.JoServer.model.Song;
 import me.joshmendiola.JoServer.repository.SongRepository;
+import me.joshmendiola.JoServer.service.utils.Utility;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ResourceLoader;
@@ -10,6 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,7 +21,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @RestController
-@CrossOrigin
+@CrossOrigin(origins = "http://localhost:3000")
 public class SongController
 {
     @Autowired
@@ -49,20 +51,27 @@ public class SongController
         }
     }
 
-    @PostMapping(value = "/song", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/song", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
     @ResponseStatus(HttpStatus.CREATED)
     public Song addSong(@RequestPart("cover") @NotNull MultipartFile cover,
                         @RequestPart("song") @NotNull Song songData,
                         @RequestPart("audio") @NotNull MultipartFile audio) throws IOException
     {
-        byte[] fileBytes = cover.getBytes();
+        byte[] coverFileBytes = cover.getBytes();
+        byte[] audioFileBytes = audio.getBytes();
 
-        String uploadsFolder = resourceLoader.getResource("classpath:uploads/").getFile().getAbsolutePath();
+        String uploadsFolder = new File("uploads").getAbsolutePath();
+        Path uploadsPath = Paths.get(uploadsFolder);
 
-        Path coverFilePath = Paths.get(uploadsFolder, cover.getOriginalFilename() + UUID.randomUUID());
-        Path audioFilePath = Paths.get(uploadsFolder, audio.getOriginalFilename() + UUID.randomUUID());
+        Path coverFilePath = Paths.get(uploadsFolder, Utility.generateUniqueFilename());
+        Path audioFilePath = Paths.get(uploadsFolder, Utility.generateUniqueFilename());
 
-        Files.write(coverFilePath, fileBytes);
+        System.out.println(coverFilePath);
+        System.out.println(audioFilePath);
+        System.out.println("meow!!");
+
+        Files.write(coverFilePath, coverFileBytes);
+        Files.write(audioFilePath, audioFileBytes);
 
         UUID uuid = UUID.randomUUID();
         Song song = new Song();
@@ -88,7 +97,7 @@ public class SongController
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void updateSong(@RequestBody @NotNull Song newSong, @PathVariable UUID id)
     {
-        Song song = new Song();
+        Song song = repository.getReferenceById(id);
         song.setAuthor(newSong.getAuthor());
         song.setAbout(newSong.getAbout());
         song.setTitle(newSong.getTitle());
