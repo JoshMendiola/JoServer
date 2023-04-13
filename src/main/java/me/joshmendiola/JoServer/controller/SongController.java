@@ -34,11 +34,51 @@ public class SongController
     JschConfig jsch = new JschConfig();
 
     @GetMapping("/songs")
-    @ResponseStatus(HttpStatus.ACCEPTED)
-    public List<Song> getAllSongs()
-    {
-        return repository.findAll();
+    public ResponseEntity<List<Song>> getAllSongs() throws JSchException, SftpException, IOException {
+        ChannelSftp channelSftp = jsch.setupJsch();
+        channelSftp.connect();
+        try {
+            List<Song> songs = repository.findAll();
+            List<Song> songsWithFiles = new ArrayList<>();
+            for (Song song : songs) {
+                String coverFileName = song.getCover();
+                String audioFileName = song.getAudio();
+                String coverDir = "/Users/joshuamendiola/JohmenBlogFiles/Covers/" + coverFileName;
+                String audioDir = "/Users/joshuamendiola/JohmenBlogFiles/Audios/" + audioFileName;
+                ByteArrayOutputStream coverByteArrayOutputStream = new ByteArrayOutputStream();
+                ByteArrayOutputStream audioByteArrayOutputStream = new ByteArrayOutputStream();
+
+                try {
+                    channelSftp.get(coverDir, coverByteArrayOutputStream);
+                } catch (SftpException e) {
+                    coverByteArrayOutputStream.close();
+                    throw new RuntimeException("Failed to get cover file for song with ID: " + song.getSong_id(), e);
+                }
+                try {
+                    channelSftp.get(audioDir, audioByteArrayOutputStream);
+                } catch (SftpException e) {
+                    coverByteArrayOutputStream.close();
+                    audioByteArrayOutputStream.close();
+                    throw new RuntimeException("Failed to get audio file for song with ID: " + song.getSong_id(), e);
+                }
+                byte[] coverBytes = coverByteArrayOutputStream.toByteArray();
+                byte[] audioBytes = audioByteArrayOutputStream.toByteArray();
+                Song songWithFiles = new Song();
+                songWithFiles.setSong_id(song.getSong_id());
+                songWithFiles.setTitle(song.getTitle());
+                songWithFiles.setDate(song.getDate());
+                songWithFiles.setAbout(song.getAbout());
+                songWithFiles.setAuthor(song.getAuthor());
+                songWithFiles.setCover(Base64.getEncoder().encodeToString(coverBytes));
+                songWithFiles.setAudio(Base64.getEncoder().encodeToString(audioBytes));
+                songsWithFiles.add(songWithFiles);
+            }
+            return ResponseEntity.ok().body(songsWithFiles);
+        } finally {
+            channelSftp.disconnect();
+        }
     }
+
 
     @GetMapping("/song/{id}")
     public ResponseEntity<Song> getSongByID(@PathVariable UUID id) throws JSchException, SftpException, IOException {
