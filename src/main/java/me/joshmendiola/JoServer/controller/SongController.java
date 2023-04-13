@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
+import java.net.URL;
+import java.sql.Blob;
 import java.util.*;
 
 @RestController
@@ -48,8 +50,6 @@ public class SongController
             String audioFileName = song.getAudio();
             String coverDir = "/Users/joshuamendiola/JohmenBlogFiles/Covers/" + coverFileName;
             String audioDir = "/Users/joshuamendiola/JohmenBlogFiles/Audios/" + audioFileName;
-            System.out.println(coverFileName);
-            System.out.println(audioFileName);
             ByteArrayOutputStream coverByteArrayOutputStream = new ByteArrayOutputStream();
             ByteArrayOutputStream audioByteArrayOutputStream = new ByteArrayOutputStream();
 
@@ -74,13 +74,14 @@ public class SongController
             songWithFiles.setDate(song.getDate());
             songWithFiles.setAbout(song.getAbout());
             songWithFiles.setAuthor(song.getAuthor());
-            songWithFiles.setCover(Arrays.toString(coverBytes));
-            songWithFiles.setAudio(Arrays.toString(audioBytes));
+            songWithFiles.setCover(Base64.getEncoder().encodeToString(coverBytes));
+            songWithFiles.setAudio(Base64.getEncoder().encodeToString(audioBytes));
             return ResponseEntity.ok().body(songWithFiles);
         } finally {
             channelSftp.disconnect();
         }
     }
+
 
 
     @PostMapping(value = "/song", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
