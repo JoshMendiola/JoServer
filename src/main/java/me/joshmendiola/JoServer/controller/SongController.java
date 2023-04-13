@@ -12,16 +12,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.*;
 import java.util.*;
 
 @RestController
@@ -43,29 +39,49 @@ public class SongController
     }
 
     @GetMapping("/song/{id}")
-    @ResponseStatus(HttpStatus.ACCEPTED)
-    public Song getSongByID(@PathVariable UUID id) throws IOException
-    {
-        Optional<Song> songOptional = repository.findById(id);
+    public ResponseEntity<Song> getSongByID(@PathVariable UUID id) throws JSchException, SftpException, IOException {
+        ChannelSftp channelSftp = jsch.setupJsch();
+        channelSftp.connect();
+        try {
+            Song song = repository.findById(id).orElseThrow(() -> new IllegalArgumentException("Invalid song ID: " + id));
+            String coverFileName = song.getCover();
+            String audioFileName = song.getAudio();
+            String coverDir = "/Users/joshuamendiola/JohmenBlogFiles/Covers/" + coverFileName;
+            String audioDir = "/Users/joshuamendiola/JohmenBlogFiles/Audios/" + audioFileName;
+            System.out.println(coverFileName);
+            System.out.println(audioFileName);
+            ByteArrayOutputStream coverByteArrayOutputStream = new ByteArrayOutputStream();
+            ByteArrayOutputStream audioByteArrayOutputStream = new ByteArrayOutputStream();
 
-        if(songOptional.isEmpty())
-        {
-            throw new NullPointerException("No Blog with that ID found !");
+            try {
+                channelSftp.get(coverDir, coverByteArrayOutputStream);
+            } catch (SftpException e) {
+                coverByteArrayOutputStream.close();
+                throw new RuntimeException("Failed to get cover file for song with ID: " + id, e);
+            }
+            try {
+                channelSftp.get(audioDir, audioByteArrayOutputStream);
+            } catch (SftpException e) {
+                coverByteArrayOutputStream.close();
+                audioByteArrayOutputStream.close();
+                throw new RuntimeException("Failed to get audio file for song with ID: " + id, e);
+            }
+            byte[] coverBytes = coverByteArrayOutputStream.toByteArray();
+            byte[] audioBytes = audioByteArrayOutputStream.toByteArray();
+            Song songWithFiles = new Song();
+            songWithFiles.setSong_id(song.getSong_id());
+            songWithFiles.setTitle(song.getTitle());
+            songWithFiles.setDate(song.getDate());
+            songWithFiles.setAbout(song.getAbout());
+            songWithFiles.setAuthor(song.getAuthor());
+            songWithFiles.setCover(Arrays.toString(coverBytes));
+            songWithFiles.setAudio(Arrays.toString(audioBytes));
+            return ResponseEntity.ok().body(songWithFiles);
+        } finally {
+            channelSftp.disconnect();
         }
-
-//        Song song = songOptional.get();
-//
-//        byte[] mp3Bytes = Files.readAllBytes(Paths.get("/path/to/mp3file.mp3"));
-//        String mp3Base64 = Base64.encodeBase64String(mp3Bytes);
-//        byte[] jpgBytes = Files.readAllBytes(Paths.get("/path/to/jpgfile.jpg"));
-//        String jpgBase64 = Base64.encodeBase64String(jpgBytes);
-//
-//        Map<String, Object> response = new HashMap<>();
-//        response.put("song", song);
-//        response.put("mp3file", mp3Base64);
-//        response.put("jpgfile", jpgBase64);
-        return songOptional.get();
     }
+
 
     @PostMapping(value = "/song", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
     @ResponseStatus(HttpStatus.CREATED)
@@ -95,15 +111,16 @@ public class SongController
         UUID uuid = UUID.randomUUID();
         Song song = new Song();
 
-        System.out.println(songData.getAuthor());
+        System.out.println(coverFileName + coverExtension);
+        System.out.println(audioFileName + audioExtension);
 
         song.setSong_id(uuid);
         song.setTitle(songData.getTitle());
         song.setDate(songData.getDate());
         song.setAbout(songData.getAbout());
         song.setAuthor(songData.getAuthor());
-        song.setCover(coverFileName);
-        song.setAudio(audioFileName);
+        song.setCover(coverFileName + coverExtension);
+        song.setAudio(audioFileName + audioExtension);
 
         if(repository.existsById(song.getSong_id()))
         {
