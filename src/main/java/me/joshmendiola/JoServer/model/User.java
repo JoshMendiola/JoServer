@@ -26,19 +26,23 @@ public class User
     @Setter
     private Role role;
 
+    @Getter
+    @Setter
+    private String bio;
+
     @Override
     public boolean equals(Object o)
     {
         if (this == o) return true;
         if (!(o instanceof User)) return false;
         User user = (User) o;
-        return Objects.equals(getUserId(), user.getUserId()) && Objects.equals(getUsername(), user.getUsername()) && Objects.equals(getPassword(), user.getPassword()) && getRole() == user.getRole();
+        return Objects.equals(getUserId(), user.getUserId()) && Objects.equals(getUsername(), user.getUsername()) && Objects.equals(getPassword(), user.getPassword()) && getRole() == user.getRole() && Objects.equals(getBio(), user.getBio());
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(getUserId(), getUsername(), getPassword(), getRole());
+        return Objects.hash(getUserId(), getUsername(), getPassword(), getRole(), getBio());
     }
 
     @Override
@@ -49,6 +53,7 @@ public class User
                 ", username='" + username + '\'' +
                 ", password='" + password + '\'' +
                 ", role=" + role +
+                ", bio='" + bio + '\'' +
                 '}';
     }
 }
