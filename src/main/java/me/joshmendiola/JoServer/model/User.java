@@ -1,16 +1,24 @@
 package me.joshmendiola.JoServer.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.persistence.*;
+import lombok.*;
 import me.joshmendiola.JoServer.enums.Role;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
+@Builder
+@ToString
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
-public class User
+@Table(name = "Users")
+public class User implements UserDetails
 {
     @Id
     @Getter
@@ -22,8 +30,14 @@ public class User
     @Getter
     @Setter
     private String password;
+
     @Getter
     @Setter
+    private String email;
+
+    @Getter
+    @Setter
+    @Enumerated(EnumType.STRING)
     private Role role;
 
     @Getter
@@ -31,29 +45,47 @@ public class User
     private String bio;
 
     @Override
+    public Collection<? extends GrantedAuthority> getAuthorities()
+    {
+        return List.of(new SimpleGrantedAuthority(role.name()));
+    }
+
+    @Override
+    public boolean isAccountNonExpired()
+    {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked()
+    {
+        return false;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired()
+    {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled()
+    {
+        return true;
+    }
+
+    @Override
     public boolean equals(Object o)
     {
         if (this == o) return true;
         if (!(o instanceof User)) return false;
         User user = (User) o;
-        return Objects.equals(getUserId(), user.getUserId()) && Objects.equals(getUsername(), user.getUsername()) && Objects.equals(getPassword(), user.getPassword()) && getRole() == user.getRole() && Objects.equals(getBio(), user.getBio());
+        return Objects.equals(getUserId(), user.getUserId()) && Objects.equals(getUsername(), user.getUsername()) && Objects.equals(getPassword(), user.getPassword()) && Objects.equals(getEmail(), user.getEmail()) && getRole() == user.getRole() && Objects.equals(getBio(), user.getBio());
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(getUserId(), getUsername(), getPassword(), getRole(), getBio());
-    }
-
-    @Override
-    public String toString()
-    {
-        return "User{" +
-                "userId=" + userId +
-                ", username='" + username + '\'' +
-                ", password='" + password + '\'' +
-                ", role=" + role +
-                ", bio='" + bio + '\'' +
-                '}';
+        return Objects.hash(getUserId(), getUsername(), getPassword(), getEmail(), getRole(), getBio());
     }
 }
