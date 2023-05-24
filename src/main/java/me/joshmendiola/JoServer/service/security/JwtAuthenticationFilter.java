@@ -1,6 +1,5 @@
 package me.joshmendiola.JoServer.service.security;
 
-import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,10 +18,11 @@ import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
-public class JwtRequestFilter extends OncePerRequestFilter
+public class JwtAuthenticationFilter extends OncePerRequestFilter
 {
 
     private JwtService jwtservice;
+    private final UserDetailsService userDetailsService;
 
     @Override
     protected void doFilterInternal(
@@ -41,7 +41,29 @@ public class JwtRequestFilter extends OncePerRequestFilter
             return;
         }
 
+        //grabs the jwt  and the username
         jwt = authHeader.substring(7);
         username = jwtservice.extractUsername(jwt);
+
+        //if the username is not null and they havent been authenticated yet, check their token
+        if(username != null && SecurityContextHolder.getContext().getAuthentication() == null)
+        {
+            UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
+
+            //if its valid, authorize them
+            if(jwtservice.isTokenValid(jwt, userDetails))
+            {
+                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                        userDetails,
+                        null,
+                        userDetails.getAuthorities()
+                );
+                authToken.setDetails(
+                        new WebAuthenticationDetailsSource().buildDetails(request)
+                );
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+            }
+        }
+        filterChain.doFilter(request, response);
     }
 }
