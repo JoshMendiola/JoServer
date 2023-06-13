@@ -15,6 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import me.joshmendiola.JoServer.service.security.JwtAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -29,7 +30,9 @@ public class SecurityConfig
     {
         http.csrf().disable()
                 .authorizeHttpRequests()
-                .requestMatchers("/api/v1/auth/**")
+                .requestMatchers(new AntPathRequestMatcher("/api/v1/auth/**"))
+                .permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/noauth/**", "GET"))
                 .permitAll()
                 .anyRequest()
                 .authenticated()

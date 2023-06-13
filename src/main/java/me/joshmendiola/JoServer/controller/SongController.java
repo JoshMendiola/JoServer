@@ -31,7 +31,7 @@ public class SongController
 
     JschConfig jsch = new JschConfig();
 
-    @GetMapping("/songs")
+    @GetMapping("/noauth/songs")
     public ResponseEntity<List<Song>> getAllSongs() throws JSchException, SftpException, IOException {
         ChannelSftp channelSftp = jsch.setupJsch();
         channelSftp.connect();
@@ -78,7 +78,7 @@ public class SongController
     }
 
 
-    @GetMapping("/song/{id}")
+    @GetMapping("/noauth/song/{id}")
     public ResponseEntity<Song> getSongByID(@PathVariable UUID id) throws JSchException, SftpException, IOException {
         ChannelSftp channelSftp = jsch.setupJsch();
         channelSftp.connect();

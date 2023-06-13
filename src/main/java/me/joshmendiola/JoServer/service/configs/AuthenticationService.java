@@ -22,6 +22,8 @@ public class AuthenticationService
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
 
+    /* this message creates a user with the information passed into the response
+    and creates a token based on that users information */
     public AuthenticationResponse register(RegisterRequest request)
     {
         var user = User.builder()
@@ -38,6 +40,8 @@ public class AuthenticationService
                 .build();
     }
 
+    //takes the user information passed into it and verifies that the username and password match
+    //then generates a token if the user is verified
     public AuthenticationResponse authenticate(AuthenticationRequest request)
     {
         authenticationManager.authenticate(

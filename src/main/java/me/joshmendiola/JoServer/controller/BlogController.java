@@ -18,14 +18,14 @@ public class BlogController
     @Autowired
     private BlogRepository repository;
 
-    @GetMapping("/blogs")
+    @GetMapping("/noauth/blogs")
     @ResponseStatus(HttpStatus.ACCEPTED)
     public List<Blog> getALlBlogs()
     {
         return repository.findAll();
     }
 
-    @GetMapping("/blog/{id}")
+    @GetMapping("/noauth/blog/{id}")
     @ResponseStatus(HttpStatus.ACCEPTED)
     public Blog getBlogByID(@PathVariable UUID id)
     {
